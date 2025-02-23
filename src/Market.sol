@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity ^0.8.13;
+pragma solidity 0.8.21;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "./nft.sol";
 
 contract Markets {
     uint256 private _indexCounter;
@@ -17,10 +18,10 @@ contract Markets {
     Market[] public markets;
     mapping(uint256 => Market) tokenIdToMarket;
     mapping(address => uint) tokenIdToPrice;
-    address internal nftMint;
+    CombineNFT internal nftMint;
 
     constructor(address _nft) {
-        nftMint = _nft;
+        nftMint = CombineNFT(_nft);
     }
 
     function hasActive(uint256 _tokenId) public view returns (bool) {
@@ -29,14 +30,11 @@ contract Markets {
 
     //上架
     function shelve(uint256 _tokenId, uint256 _price) public {
-        require(
-            IERC721(nftMint).ownerOf(_tokenId) == msg.sender,
-            "The is Owner?"
-        );
+        require(nftMint.ownerOf(_tokenId) == msg.sender, "The is Owner?");
         require(!hasActive(_tokenId), "Alread on shelves");
         require(
-            IERC721(nftMint).getApproved(_tokenId) == address(this) ||
-                IERC721(nftMint).isApprovedForAll(msg.sender, address(this)),
+            nftMint.getApproved(_tokenId) == address(this) ||
+                nftMint.isApprovedForAll(msg.sender, address(this)),
             "No approve"
         );
         require(_price > 0, "Price must be greater than 0");
@@ -58,10 +56,7 @@ contract Markets {
     }
 
     function unShelve(uint256 _tokenId) public {
-        require(
-            IERC721(nftMint).ownerOf(_tokenId) == msg.sender,
-            "Ths is owner"
-        );
+        require(nftMint.ownerOf(_tokenId) == msg.sender, "Ths is owner");
         require(hasActive(_tokenId), "Removed from shelves");
 
         _unShelve(_tokenId);
@@ -109,7 +104,8 @@ contract Markets {
 
         tokenIdToPrice[market.seller] = msg.value;
 
-        IERC721(nftMint).safeTransferFrom(market.seller, msg.sender, _tokenId);
+        nftMint.safeTransferFrom(market.seller, msg.sender, _tokenId);
+        nftMint.updateOwner(msg.sender, _tokenId);
     }
 
     function withdraw() public {

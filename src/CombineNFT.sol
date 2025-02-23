@@ -54,13 +54,6 @@ contract CombineNFT is ERC721, ERC721Enumerable, ERC721URIStorage {
         _interSafeMint(_to, 0, 0, 0);
     }
 
-    function batchSafeMint(address _to, uint8 _val) public {
-        require(_val <= 10, "MAX 10");
-        for (uint i = 0; i < _val; i++) {
-            _interSafeMint(_to, 0, 0, 0);
-        }
-    }
-
     function _interSafeMint(
         address _to,
         uint8 _level,
@@ -70,15 +63,14 @@ contract CombineNFT is ERC721, ERC721Enumerable, ERC721URIStorage {
         uint256 tokenId = _tokenIdCounter;
         _tokenIdCounter++;
 
-        string memory uri = string(
-            abi.encodePacked(_baseURI(), _setURI(_level))
-        );
+        string memory uriPart = _setURI(_level);
+        string memory uri = string(abi.encodePacked(_baseURI(), uriPart));
 
         Horse memory horse = Horse(_to, tokenId, _level, _faId, _moId, uri);
         horses.push(horse);
 
         _safeMint(_to, tokenId);
-        _setTokenURI(tokenId, _setURI(_level));
+        _setTokenURI(tokenId, uriPart);
     }
 
     function getHorse(
@@ -118,6 +110,13 @@ contract CombineNFT is ERC721, ERC721Enumerable, ERC721URIStorage {
         _burn(mother.tokenId);
         delete horses[_faId];
         delete horses[_moId];
+    }
+
+    function updateOwner(address buyer, uint256 _tokenId) public {
+        // 确保购买者不是零地址
+        require(buyer != address(0), "Buyer address cannot be zero");
+        // 更新 horses 数组中的所有者
+        horses[_tokenId].owner = buyer;
     }
 
     function tokenURI(
