@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.21;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -23,18 +23,13 @@ contract CombineNFT is ERC721, ERC721Enumerable, ERC721URIStorage {
 
     function _baseURI() internal pure override returns (string memory) {
         return
-            "https://raw.githubusercontent.com/SimpLe-L/simp1e-blog/main/public/donkeys/";
+            "https://turquoise-real-jellyfish-905.mypinata.cloud/ipfs/bafybeicq2vb72wznqybo663ptmthuralk2ubwzwetl56zjphnylkqnqy3u/";
     }
 
     function _setURI(uint256 _level) internal view returns (string memory uri) {
         uint random = _random(100);
         uri = string(
-            abi.encodePacked(
-                _level.toString(),
-                "/images/",
-                random.toString(),
-                ".png"
-            )
+            abi.encodePacked(_level.toString(), "/", random.toString(), ".png")
         );
     }
 
@@ -118,6 +113,11 @@ contract CombineNFT is ERC721, ERC721Enumerable, ERC721URIStorage {
             father.tokenId,
             mother.tokenId
         );
+        // 销毁合成使用的两个NFT
+        _burn(father.tokenId);
+        _burn(mother.tokenId);
+        delete horses[_faId];
+        delete horses[_moId];
     }
 
     function tokenURI(
